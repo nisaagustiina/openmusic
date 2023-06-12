@@ -1,7 +1,5 @@
 /* eslint-disable spaced-comment */
-/* eslint-disable function-paren-newline */
-/* eslint-disable space-before-blocks */
-/* eslint-disable keyword-spacing */
+
 require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
@@ -48,7 +46,8 @@ const init = async () => {
           validator: SongsValidator,
         },
       },
-    ]);
+    ],
+  );
 
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;

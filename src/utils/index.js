@@ -30,7 +30,4 @@ const mapSongsModel = ({
   albumId,
 });
 
-const filterTitleSongByParam = (song, title) => song.title.toLowerCase().includes(title);
-const filterPerformerSongByParam = (song, performer) => song.performer.toLowerCase().includes(performer);
-
-module.exports = { mapAlbumsModel, mapSongsModel, filterTitleSongByParam, filterPerformerSongByParam };
+module.exports = { mapAlbumsModel, mapSongsModel };

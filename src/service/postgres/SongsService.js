@@ -1,17 +1,17 @@
-/* eslint-disable object-curly-newline */
-/* eslint-disable no-trailing-spaces */
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
-const { filterPerformerSongByParam, filterTitleSongByParam, mapSongsModel } = require('../../utils');
+const { mapSongsModel } = require('../../utils');
 
 class SongsService {
   constructor() {
     this._pool = new Pool();
   }
 
-  async addSong({ title, year, genre, performer, duration, albumId }) {
+  async addSong({
+    title, year, genre, performer, duration, albumId,
+  }) {
     const id = `song-${nanoid(16)}`;
 
     const query = {
@@ -28,20 +28,15 @@ class SongsService {
     return result.rows[0].id;
   }
 
-  async getSongs(params) {
-    const result = await this._pool.query('SELECT id, title, performer FROM songs');
-    const songs = result.rows;
+  async getSongs({ title = '', performer = '' }) {
+    const query = {
+      text: `SELECT id, title, performer FROM songs WHERE true AND title ILIKE $1
+      AND performer ILIKE $2`,
+      values: [`%${title}%`, `%${performer}%`],
+    };
 
-    let filteredSong = songs;
-    if ('title' in params) {
-      filteredSong = filteredSong.filter((s) => filterTitleSongByParam(s, params.title));
-    }
-
-    if ('performer' in params) {
-      filteredSong = filteredSong.filter((s) => filterPerformerSongByParam(s, params.performer));
-    }
-
-    return filteredSong;
+    const result = await this._pool.query(query);
+    return result.rows;
   }
 
   async getSongById(id) {
@@ -52,14 +47,16 @@ class SongsService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('Song tidak ditemukan');
     }
 
     return result.rows.map(mapSongsModel)[0];
   }
 
-  async editSongById(id, { title, year, genre, performer, duration, albumId }) {
+  async editSongById(id, {
+    title, year, genre, performer, duration, albumId,
+  }) {
     const query = {
       text: 'UPDATE songs SET title = $1, year = $2, genre = $3, performer = $4, duration = $5, "albumId" = $6 WHERE id = $7 RETURNING id',
       values: [title, year, genre, performer, duration, albumId, id],
@@ -67,7 +64,7 @@ class SongsService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('song tidak ditemukan');
     }
   }
@@ -80,7 +77,7 @@ class SongsService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
+    if (!result.rowCount) {
       throw new NotFoundError('song tidak ditemukan');
     }
   }
