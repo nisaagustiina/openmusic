@@ -88,7 +88,7 @@ class PlaylistsService {
     return result.rows[0];
   }
 
-  async deletePlaylistSongById({ playlistId, songId }) {
+  async deletePlaylistSongById({ playlistId, songId, userId }) {
     const query = {
       text: 'DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2 RETURNING id',
       values: [playlistId, songId],
@@ -101,7 +101,7 @@ class PlaylistsService {
     }
   }
 
-  async verifyPlaylistOwner(id, owner) {
+  async verifyPlaylistOwner({ id, owner }) {
     const query = {
       text: 'SELECT owner FROM playlist WHERE id = $1',
       values: [id],

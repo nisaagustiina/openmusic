@@ -18,4 +18,4 @@ const TokenManager = {
 
 };
 
-module.export = TokenManager;
+module.exports = TokenManager;
