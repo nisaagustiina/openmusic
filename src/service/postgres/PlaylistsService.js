@@ -28,12 +28,13 @@ class PlaylistsService {
 
   async getPlaylists({ owner }) {
     const query = {
-      text: 'SELECT p.id, p.name, p.username FROM playlists p LEFT JOIN users u ON p.owner = u.id WHERE p.owner = $1',
+      text: 'SELECT p.id, p.name, u.username FROM playlists p LEFT JOIN users u ON p.owner = u.id WHERE p.owner = $1',
       values: [owner],
     };
 
-    const { rows } = await this._pool.query(query);
-    return rows;
+    const result = await this._pool.query(query);
+    console.log(result.rows);
+    return result;
   }
 
   async deletePlaylistById(id) {
@@ -88,7 +89,7 @@ class PlaylistsService {
     return result.rows[0];
   }
 
-  async deletePlaylistSongById({ playlistId, songId, userId }) {
+  async deletePlaylistSongById({ playlistId, songId, id }) {
     const query = {
       text: 'DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2 RETURNING id',
       values: [playlistId, songId],
