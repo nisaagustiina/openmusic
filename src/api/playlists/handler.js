@@ -1,8 +1,9 @@
 const autoBind = require('auto-bind');
 
 class PlaylistsHandler {
-  constructor(service, validator) {
+  constructor(service, playlistActivitiesService, validator) {
     this._service = service;
+    this._playlistActivitiesService = playlistActivitiesService;
     this._validator = validator;
 
     autoBind(this);
@@ -42,7 +43,7 @@ class PlaylistsHandler {
     };
   }
 
-  async deletePlaylistHandler(request) {
+  async deletePlaylistByIdHandler(request) {
     const { id } = request.params;
     const { id: owner } = request.auth.credentials;
 
@@ -61,7 +62,7 @@ class PlaylistsHandler {
 
     const { id: playlistId } = request.params;
     const { songId } = request.payload;
-    const { userId } = request.auth.credentials;
+    const { id: userId } = request.auth.credentials;
 
     await this._service.verifyPlaylistAccess({ playlistId, userId });
     await this._service.addPlaylistSong({ playlistId, songId, userId });
@@ -75,13 +76,13 @@ class PlaylistsHandler {
     return response;
   }
 
-  async getPlaylistSongHandler(request) {
+  async getPlaylistByIdHandler(request) {
     const { id } = request.params;
-    const { userId } = request.auth.credentials;
+    const { id: userId } = request.auth.credentials;
 
     await this._service.verifyPlaylistAccess({ playlistId: id, userId });
 
-    const playlist = await this._service.getPlaylistSongById(id);
+    const playlist = await this._service.getPlaylistById(id);
 
     return {
       status: 'succes',
@@ -91,19 +92,37 @@ class PlaylistsHandler {
     };
   }
 
-  async deletePlaylisSongtHandler(request) {
+  async deletePlaylistSongByIdHandler(request) {
     this._validator.validatePlaylistSongPayload(request.payload);
 
     const { id: playlistId } = request.params;
-    const { userId } = request.auth.credentials;
+    const { id: userId } = request.auth.credentials;
     const { songId } = request.payload;
 
     await this._service.verifyPlaylistAccess({ playlistId, userId });
-    await this.service.eletePlaylistSongById({ playlistId, songId, userId });
+    await this.service.deletePlaylistSongById({ playlistId, songId, userId });
 
     return {
       status: 'success',
       message: 'Song berhasil dihapus',
+    };
+  }
+
+  async getPlaylistActivitiesByIdHandler(request) {
+    const { id: playlistId } = request.params;
+    const { id: userId } = request.auth.credentials;
+
+    await this._service.verifyPlaylistAccess({ playlistId, userId });
+
+    const activities = await this._playlistActivitiesService.getActivityByPlaylistId({
+      playlistId,
+    });
+
+    return {
+      status: 'succes',
+      data: {
+        activities,
+      },
     };
   }
 

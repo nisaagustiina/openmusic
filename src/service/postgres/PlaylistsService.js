@@ -5,8 +5,10 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistsService {
-  constructor() {
+  constructor(collaborationsService, playlistActivitiesService) {
     this._pool = new Pool();
+    this._collaborationsService = collaborationsService;
+    this._playlistActivitiesService = playlistActivitiesService;
   }
 
   async addPlaylist({ name, owner }) {
@@ -28,46 +30,15 @@ class PlaylistsService {
 
   async getPlaylists({ owner }) {
     const query = {
-      text: 'SELECT p.id, p.name, u.username FROM playlists p LEFT JOIN users u ON p.owner = u.id WHERE p.owner = $1',
+      text: 'SELECT p.id, p.name, u.username FROM playlists p LEFT JOIN users u ON p.owner = u.id LEFT JOIN collaborations c ON c.playlist_id = p.id WHERE p.owner = $1 OR c.user_id = $1',
       values: [owner],
     };
 
-    const result = await this._pool.query(query);
-    console.log(result.rows);
-    return result;
+    const { rows } = await this._pool.query(query);
+    return rows;
   }
 
-  async deletePlaylistById(id) {
-    const query = {
-      text: 'DELETE FROM playlists WHERE id = $1 RETURNING id',
-      values: [id],
-    };
-
-    const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Playlist tidak ditemukan');
-    }
-  }
-
-  async addPlaylistSong({ playlistId, songId, userId }) {
-    const id = `playlist_song-${nanoid(16)}`;
-
-    const query = {
-      text: 'INSERT INTO playlist_songs SELECT $1, $2, $3 WHERE EXISTS (SELECT 1 FROM songs WHERE "id" = $4) RETURNING id',
-      values: [id, playlistId, songId, userId],
-    };
-
-    const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Id Song tidak ditemukan');
-    }
-
-    return result.rows[0].id;
-  }
-
-  async getPlaylistSongById(id) {
+  async getPlaylistById(id) {
     const query = {
       text: `SELECT p.id, p.name, u.username, COALESCE(
         json_agg(
@@ -86,19 +57,20 @@ class PlaylistsService {
     if (!result.rowCount) {
       throw new NotFoundError('Playlist tidak ditemukan');
     }
+
     return result.rows[0];
   }
 
-  async deletePlaylistSongById({ playlistId, songId, id }) {
+  async deletePlaylistById(id) {
     const query = {
-      text: 'DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2 RETURNING id',
-      values: [playlistId, songId],
+      text: 'DELETE FROM playlists WHERE id = $1 RETURNING id',
+      values: [id],
     };
 
     const result = await this._pool.query(query);
 
     if (!result.rowCount) {
-      throw new NotFoundError('Id Song tidak ditemukan');
+      throw new NotFoundError('Playlist tidak ditemukan');
     }
   }
 
@@ -129,6 +101,52 @@ class PlaylistsService {
         throw error;
       }
     }
+
+    try {
+      await this._collaborationsService.verifyCollaboration({ playlistId, userId });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+    }
+  }
+
+  async addPlaylistSong({ playlistId, songId, userId }) {
+    const id = `playlist_song-${nanoid(16)}`;
+
+    const query = {
+      text: 'INSERT INTO playlist_songs SELECT $1, $2, $3 WHERE EXISTS (SELECT 1 FROM songs WHERE "id" = $4) RETURNING id',
+      values: [id, playlistId, songId, songId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Id Song tidak ditemukan');
+    }
+
+    await this._playlistActivitiesService.addActivity({
+      playlistId, songId, userId, action: 'add',
+    });
+
+    return result.rows[0].id;
+  }
+
+  async deletePlaylistSongById({ playlistId, songId, userId }) {
+    const query = {
+      text: 'DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2 RETURNING id',
+      values: [playlistId, songId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Id Song tidak ditemukan');
+    }
+
+    await this._playlistActivitiesService.addActivity({
+      playlistId, songId, userId, action: 'delete',
+    });
   }
 
 }
