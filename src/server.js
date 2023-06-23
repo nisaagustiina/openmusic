@@ -22,6 +22,7 @@ const UsersValidator = require('./validator/users');
 
 //playlist
 const playlists = require('./api/playlists');
+const PlaylistSongsService = require('./service/postgres/PlaylistSongsService');
 const PlaylistsService = require('./service/postgres/PlaylistsService');
 const PlaylistsValidator = require('./validator/playlists');
 
@@ -30,14 +31,16 @@ const collaborations = require('./api/collaborations');
 const CollaborationsService = require('./service/postgres/CollaborationsService');
 const CollaborationsValidator = require('./validator/collaborations');
 
-//playlist activities
-const PlaylistActivitiesService = require('./service/postgres/PlaylistActivities');
+//playlist songs activities
+const PSAService = require('./service/postgres/PlaylistActivitiesService');
 
 //authentications
 const authentications = require('./api/authentications');
 const AuthenticationsService = require('./service/postgres/AuthenticationsService');
-const TokenManager = require('./tokenize/TokenManager');
 const AuthenticationsValidator = require('./validator/authentications');
+
+//Token Manager
+const TokenManager = require('./tokenize/TokenManager');
 
 const ClientError = require('./exceptions/ClientError');
 
@@ -45,10 +48,12 @@ const init = async () => {
   const albumsService = new AlbumsService();
   const songsService = new SongsService();
   const usersService = new UsersService();
-  const collaborationsService = new CollaborationsService();
-  const playlistActivitiesService = new PlaylistActivitiesService();
-  const playlistsService = new PlaylistsService(collaborationsService, playlistActivitiesService);
   const authenticationsService = new AuthenticationsService();
+  const collaborationsService = new CollaborationsService();
+  const psaService = new PSAService();
+  const playlistsService = new PlaylistsService(collaborationsService);
+  const playlistSongsService = new PlaylistSongsService(psaService);
+
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
@@ -76,7 +81,7 @@ const init = async () => {
     validate: (artifacts) => ({
       isValid: true,
       credentials: {
-        id: artifacts.decoded.payload.id,
+        userId: artifacts.decoded.payload.userId,
       },
     }),
   });
@@ -117,7 +122,8 @@ const init = async () => {
         plugin: playlists,
         options: {
           playlistsService,
-          playlistActivitiesService,
+          playlistSongsService,
+          psaService,
           validator: PlaylistsValidator,
         },
       },

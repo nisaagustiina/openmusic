@@ -5,10 +5,9 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistsService {
-  constructor(collaborationsService, playlistActivitiesService) {
+  constructor(collaborationsService) {
     this._pool = new Pool();
     this._collaborationsService = collaborationsService;
-    this._playlistActivitiesService = playlistActivitiesService;
   }
 
   async addPlaylist({ name, owner }) {
@@ -38,7 +37,7 @@ class PlaylistsService {
     return rows;
   }
 
-  async getPlaylistById(id) {
+  async getPlaylistById({ id }) {
     const query = {
       text: `SELECT p.id, p.name, u.username, COALESCE(
         json_agg(
@@ -61,7 +60,7 @@ class PlaylistsService {
     return result.rows[0];
   }
 
-  async deletePlaylistById(id) {
+  async deletePlaylistById({ id }) {
     const query = {
       text: 'DELETE FROM playlists WHERE id = $1 RETURNING id',
       values: [id],
@@ -109,44 +108,6 @@ class PlaylistsService {
         throw error;
       }
     }
-  }
-
-  async addPlaylistSong({ playlistId, songId, userId }) {
-    const id = `playlist_song-${nanoid(16)}`;
-
-    const query = {
-      text: 'INSERT INTO playlist_songs SELECT $1, $2, $3 WHERE EXISTS (SELECT 1 FROM songs WHERE "id" = $4) RETURNING id',
-      values: [id, playlistId, songId, songId],
-    };
-
-    const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Id Song tidak ditemukan');
-    }
-
-    await this._playlistActivitiesService.addActivity({
-      playlistId, songId, userId, action: 'add',
-    });
-
-    return result.rows[0].id;
-  }
-
-  async deletePlaylistSongById({ playlistId, songId, userId }) {
-    const query = {
-      text: 'DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2 RETURNING id',
-      values: [playlistId, songId],
-    };
-
-    const result = await this._pool.query(query);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Id Song tidak ditemukan');
-    }
-
-    await this._playlistActivitiesService.addActivity({
-      playlistId, songId, userId, action: 'delete',
-    });
   }
 
 }

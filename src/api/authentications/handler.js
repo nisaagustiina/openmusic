@@ -13,16 +13,16 @@ class AuthenticationsHandler {
   async postAuthenticationHandler(request, h) {
     this._validator.validatePostAuthenticationPayload(request.payload);
 
-    const id = await this._usersService.verifyUserCredential(request.payload);
+    const userId = await this._usersService.verifyUserCredential(request.payload);
 
-    const accessToken = this._tokenManager.generateAccessToken({ id });
-    const refreshToken = this._tokenManager.generateRefreshToken({ id });
+    const accessToken = this._tokenManager.generateAccessToken({ userId });
+    const refreshToken = this._tokenManager.generateRefreshToken({ userId });
 
     await this._authenticationsService.addRefreshToken(refreshToken);
 
     const response = h.response({
       status: 'success',
-      message: 'User berhasil ditambahkan',
+      message: 'Authentication behasil ditambahkan',
       data: {
         accessToken,
         refreshToken,
@@ -40,13 +40,13 @@ class AuthenticationsHandler {
 
     await this._authenticationsService.verifyRefreshToken(refreshToken);
 
-    const { id } = this._tokenManager.verifyRefreshToken(refreshToken);
+    const { userId } = this._tokenManager.verifyRefreshToken(refreshToken);
 
-    const accessToken = this._tokenManager.generateAccessToken({ id });
+    const accessToken = this._tokenManager.generateAccessToken({ userId });
 
     return {
       status: 'success',
-      message: 'User berhasil ditambahkan',
+      message: 'Access Token berhasil diperbarui',
       data: {
         accessToken,
       },

@@ -12,7 +12,7 @@ class CollaborationsService {
     const id = `collab-${nanoid(16)}`;
 
     const query = {
-      text: 'INSERT INTO collaborations SELECT $1, $2, $3 WHERE EXIST(SELECT 1 FROM users WHERE "id" = $4) RETURNING id',
+      text: 'INSERT INTO collaborations SELECT $1, $2, $3 WHERE EXISTS (SELECT 1 FROM users WHERE "id" = $4) RETURNING id',
       values: [id, playlistId, userId, userId],
     };
 

@@ -1,9 +1,9 @@
 const autoBind = require('auto-bind');
 
 class CollaborationsHandler {
-  constructor(collaborationsService, playlistService, validator) {
+  constructor(collaborationsService, playlistsService, validator) {
     this._service = collaborationsService;
-    this._playlistService = playlistService;
+    this._playlistsService = playlistsService;
     this._validator = validator;
 
     autoBind(this);
@@ -13,9 +13,9 @@ class CollaborationsHandler {
     this._validator.validateCollaborationPayload(request.payload);
 
     const { playlistId, userId } = request.payload;
-    const { id: owner } = request.auth.credentials;
+    const { userId: owner } = request.auth.credentials;
 
-    await this._playlistService.verifyPlaylistAccess({
+    await this._playlistsService.verifyPlaylistAccess({
       playlistId, userId: owner,
     });
 
@@ -39,9 +39,9 @@ class CollaborationsHandler {
     this._validator.validateCollaborationPayload(request.payload);
 
     const { playlistId, userId } = request.payload;
-    const { id: owner } = request.auth.credentials;
+    const { userId: owner } = request.auth.credentials;
 
-    await this._playlistService.verifyPlaylistOwner({
+    await this._playlistsService.verifyPlaylistOwner({
       owner, id: playlistId,
     });
 
