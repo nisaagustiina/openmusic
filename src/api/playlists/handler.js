@@ -75,6 +75,7 @@ class PlaylistsHandler {
 
     response.code(201);
     return response;
+
   }
 
   async getPlaylistByIdHandler(request) {
@@ -86,7 +87,7 @@ class PlaylistsHandler {
     const playlist = await this._service.getPlaylistById({ id });
 
     return {
-      status: 'succes',
+      status: 'success',
       data: {
         playlist,
       },
@@ -120,7 +121,7 @@ class PlaylistsHandler {
     });
 
     return {
-      status: 'succes',
+      status: 'success',
       data: {
         activities,
       },
