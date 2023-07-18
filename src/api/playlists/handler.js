@@ -123,6 +123,7 @@ class PlaylistsHandler {
     return {
       status: 'success',
       data: {
+        playlistId,
         activities,
       },
     };

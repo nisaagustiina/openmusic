@@ -1,45 +1,42 @@
-/* eslint-disable spaced-comment */
-
 require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 
-//albums
 const albums = require('./api/albums');
 const AlbumsService = require('./service/postgres/AlbumsService');
 const AlbumsValidator = require('./validator/albums');
 
-//songs
 const songs = require('./api/songs');
 const SongsService = require('./service/postgres/SongsService');
 const SongsValidator = require('./validator/songs');
 
-//users
 const users = require('./api/users');
 const UsersService = require('./service/postgres/UsersService');
 const UsersValidator = require('./validator/users');
 
-//playlist
 const playlists = require('./api/playlists');
 const PlaylistSongsService = require('./service/postgres/PlaylistSongsService');
 const PlaylistsService = require('./service/postgres/PlaylistsService');
 const PlaylistsValidator = require('./validator/playlists');
 
-//collaborations
 const collaborations = require('./api/collaborations');
 const CollaborationsService = require('./service/postgres/CollaborationsService');
 const CollaborationsValidator = require('./validator/collaborations');
 
-//playlist songs activities
+const _exports = require('./api/exports');
+const ProducerService = require('./service/rabbitmq/ProducerService');
+const ExportsValidator = require('./validator/exports');
+
+const _uploads = require('./api/uploads');
+const UploadsService = require('./service/postgres/UploadsService');
+const UploadsValidator = require('./validator/uploads');
 const PSAService = require('./service/postgres/PlaylistActivitiesService');
 
-//authentications
 const authentications = require('./api/authentications');
 const AuthenticationsService = require('./service/postgres/AuthenticationsService');
 const AuthenticationsValidator = require('./validator/authentications');
 
-//Token Manager
 const TokenManager = require('./tokenize/TokenManager');
 
 const ClientError = require('./exceptions/ClientError');
@@ -133,6 +130,14 @@ const init = async () => {
           collaborationsService,
           playlistsService,
           validator: CollaborationsValidator,
+        },
+      },
+      {
+        plugin: _exports,
+        options: {
+          service: ProducerService,
+          playlistsService,
+          validator: ExportsValidator,
         },
       },
     ],

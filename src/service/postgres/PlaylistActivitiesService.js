@@ -22,7 +22,7 @@ class PSAService {
 
   async getActivitiesByPlaylistId({ playlistId }) {
     const query = {
-      text: 'SELECT u.username, s.title, psa.action, psa.time FROM playlists_activities psa LEFT JOIN users u ON psa.user_id = u.id LEFT JOIN songs s ON psa.song_id = s.id WHERE psa.playlist_id = $1 ORDER BY psa.time ASC',
+      text: 'SELECT u.username, s.title, psa.action, psa.time FROM playlists_activities psa INNER JOIN users u ON psa.user_id = u.id INNER JOIN songs s ON psa.song_id = s.id WHERE psa.playlist_id = $1 ORDER BY psa.time ASC',
       values: [playlistId],
     };
 

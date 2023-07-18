@@ -45,13 +45,13 @@ class SongsService {
       values: [id],
     };
 
-    const result = await this._pool.query(query);
+    const { rows, rowCount } = await this._pool.query(query);
 
-    if (!result.rowCount) {
+    if (!rowCount) {
       throw new NotFoundError('Song tidak ditemukan');
     }
 
-    return result.rows.map(mapSongsModel)[0];
+    return rows.map(mapSongsModel)[0];
   }
 
   async editSongById(id, {
