@@ -4,8 +4,9 @@ const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 
 class AlbumsService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   async addAlbum({ name, year }) {
@@ -19,35 +20,30 @@ class AlbumsService {
     const result = await this._pool.query(query);
 
     if (!result.rows[0].id) {
-      throw new InvariantError('Album gagal ditambahkan');
+      throw new InvariantError('Album gagal ditambahkan!');
     }
 
     return result.rows[0].id;
   }
 
   async getAlbumById(id) {
-    const query = {
+    const query = await this._pool.query({
       text: 'SELECT * FROM albums WHERE id = $1',
       values: [id],
-    };
+    });
 
-    const querySong = {
+    const querySong = await this._pool.query({
       text: 'SELECT songs.id, songs.title, songs.performer FROM songs INNER JOIN albums ON albums.id=songs."albumId" WHERE albums.id = $1',
       values: [id],
-    };
+    });
 
-    const result = await this._pool.query(query);
-    const resultSong = await this._pool.query(querySong);
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Album tidak ditemukan');
+    if (!query.rowCount) {
+      throw new NotFoundError('Album tidak ditemukan. Id tidak ditemukan!');
     }
 
     return {
-      id: result.rows[0].id,
-      name: result.rows[0].name,
-      year: result.rows[0].year,
-      songs: resultSong.rows,
+      ...query.rows[0],
+      songs: querySong.rows,
     };
   }
 
@@ -60,7 +56,7 @@ class AlbumsService {
     const result = await this._pool.query(query);
 
     if (!result.rowCount) {
-      throw new NotFoundError('Album tidak ditemukan');
+      throw new NotFoundError('Album gagal diperbarui. Id tidak ditemukan!');
     }
   }
 
@@ -73,7 +69,7 @@ class AlbumsService {
     const result = await this._pool.query(query);
 
     if (!result.rowCount) {
-      throw new NotFoundError('Album tidak ditemukan');
+      throw new NotFoundError('Album gagal dihapus. Id tidak ditemukan!');
     }
   }
 }

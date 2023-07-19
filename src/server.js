@@ -1,55 +1,68 @@
 require('dotenv').config();
 
+const path = require('path');
+
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
 
 const albums = require('./api/albums');
-const AlbumsService = require('./service/postgres/AlbumsService');
+const AlbumsService = require('./services/postgres/AlbumsService');
 const AlbumsValidator = require('./validator/albums');
 
 const songs = require('./api/songs');
-const SongsService = require('./service/postgres/SongsService');
+const SongsService = require('./services/postgres/SongsService');
 const SongsValidator = require('./validator/songs');
 
 const users = require('./api/users');
-const UsersService = require('./service/postgres/UsersService');
+const UsersService = require('./services/postgres/UsersService');
 const UsersValidator = require('./validator/users');
 
+const authentications = require('./api/authentications');
+const AuthenticationsService = require('./services/postgres/AuthenticationsService');
+const TokenManager = require('./tokenize/TokenManager');
+const AuthenticationsValidator = require('./validator/authentications');
+
 const playlists = require('./api/playlists');
-const PlaylistSongsService = require('./service/postgres/PlaylistSongsService');
-const PlaylistsService = require('./service/postgres/PlaylistsService');
+const PlaylistsService = require('./services/postgres/PlaylistsService');
 const PlaylistsValidator = require('./validator/playlists');
 
 const collaborations = require('./api/collaborations');
-const CollaborationsService = require('./service/postgres/CollaborationsService');
+const CollaborationsService = require('./services/postgres/CollaborationsService');
 const CollaborationsValidator = require('./validator/collaborations');
 
 const _exports = require('./api/exports');
-const ProducerService = require('./service/rabbitmq/ProducerService');
 const ExportsValidator = require('./validator/exports');
 
-const _uploads = require('./api/uploads');
-const UploadsService = require('./service/postgres/UploadsService');
+const uploads = require('./api/uploads');
+const UploadsService = require('./services/postgres/UploadService');
 const UploadsValidator = require('./validator/uploads');
-const PSAService = require('./service/postgres/PlaylistActivitiesService');
 
-const authentications = require('./api/authentications');
-const AuthenticationsService = require('./service/postgres/AuthenticationsService');
-const AuthenticationsValidator = require('./validator/authentications');
+const albumlikes = require('./api/albumlikes');
+const AlbumLikesService = require('./services/postgres/AlbumsLikeService');
 
-const TokenManager = require('./tokenize/TokenManager');
+const ProducerService = require('./services/rabbitmq/ProducerService');
+
+const StorageService = require('./services/storage/StorageService');
+
+const CacheService = require('./services/redis/CacheService');
 
 const ClientError = require('./exceptions/ClientError');
 
 const init = async () => {
+  const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
+  const cacheService = new CacheService();
   const albumsService = new AlbumsService();
   const songsService = new SongsService();
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
   const collaborationsService = new CollaborationsService();
-  const psaService = new PSAService();
-  const playlistsService = new PlaylistsService(collaborationsService);
-  const playlistSongsService = new PlaylistSongsService(psaService);
+  const playlistsService = new PlaylistsService(
+    collaborationsService,
+    cacheService,
+  );
+  const uploadsService = new UploadsService();
+  const albumlikesService = new AlbumLikesService(cacheService);
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -64,6 +77,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -89,6 +105,7 @@ const init = async () => {
         plugin: albums,
         options: {
           service: albumsService,
+          storageService,
           validator: AlbumsValidator,
         },
       },
@@ -118,9 +135,8 @@ const init = async () => {
       {
         plugin: playlists,
         options: {
-          playlistsService,
-          playlistSongsService,
-          psaService,
+          service: playlistsService,
+          songsService,
           validator: PlaylistsValidator,
         },
       },
@@ -129,6 +145,7 @@ const init = async () => {
         options: {
           collaborationsService,
           playlistsService,
+          usersService,
           validator: CollaborationsValidator,
         },
       },
@@ -138,6 +155,20 @@ const init = async () => {
           service: ProducerService,
           playlistsService,
           validator: ExportsValidator,
+        },
+      },
+      {
+        plugin: uploads,
+        options: {
+          service: uploadsService,
+          storageService,
+          validator: UploadsValidator,
+        },
+      },
+      {
+        plugin: albumlikes,
+        options: {
+          service: albumlikesService,
         },
       },
     ],

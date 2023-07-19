@@ -5,18 +5,22 @@ class PlaylistService {
     this._pool = new Pool();
   }
 
-  async getPlaylistSongs(playlistId) {
+  async getPlaylistSongs(id) {
+    const queryPlaylist = await this._pool.query({
+      text: `SELECT p.id, p.name, u.username FROM playlists p LEFT JOIN users u ON p.owner = u.id
+      WHERE p.id = $1`,
+      values: [id],
+    });
+
     const query = await this._pool.query({
-      text: 'SELECT id, name FROM playlists WHERE id = $1',
-      values: [playlistId],
+      text: `SELECT s.id, s.title, s.performer
+      FROM songs s 
+      JOIN playlist_songs ps ON s.id = ps.song_id
+      WHERE ps.playlist_id = $1`,
+      values: [id],
     });
 
-    const result = await this._pool.query({
-      text: `SELECT songs.id, songs.title, songs.performer FROM songs JOIN playlist_songs ON songs.id = playlist_songs.song_id WHERE playlist_songs.playlist_id = $1`,
-      values: [playlistId],
-    });
-
-    return { ...query.rows[0], songs: result.rows };
+    return { ...queryPlaylist.rows[0], songs: query.rows };
   }
 }
 

@@ -9,14 +9,15 @@ class ExportsHandler {
     autoBind(this);
   }
 
-  async postExportHandler(request, h) {
+  async postExportPlaylistsHandler(request, h) {
     this._validator.validateExportPayload(request.payload);
 
     const { playlistId } = request.params;
     const { targetEmail } = request.payload;
     const { userId } = request.auth.credentials;
 
-    await this._playlistsService.verifyPlaylistOwner({ id: playlistId, owner: userId });
+    await this._playlistService.verifyPlaylistAccess(playlistId, userId);
+    await this._playlistService.getPlaylistById(playlistId);
 
     const message = {
       targetEmail,

@@ -5,7 +5,6 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 class UploadsService {
   constructor(cacheService) {
     this._pool = new Pool();
-
     this._cacheService = cacheService;
   }
 

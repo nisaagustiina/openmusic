@@ -22,7 +22,7 @@ class SongsService {
     const result = await this._pool.query(query);
 
     if (!result.rows[0].id) {
-      throw new InvariantError('Song gagal ditambahkan');
+      throw new InvariantError('Song gagal ditambahkan!');
     }
 
     return result.rows[0].id;
@@ -30,7 +30,7 @@ class SongsService {
 
   async getSongs({ title = '', performer = '' }) {
     const query = {
-      text: `SELECT id, title, performer FROM songs WHERE true AND title ILIKE $1
+      text: `SELECT id, title, performer FROM songs WHERE title ILIKE $1
       AND performer ILIKE $2`,
       values: [`%${title}%`, `%${performer}%`],
     };
@@ -48,7 +48,7 @@ class SongsService {
     const { rows, rowCount } = await this._pool.query(query);
 
     if (!rowCount) {
-      throw new NotFoundError('Song tidak ditemukan');
+      throw new NotFoundError('Song tidak ditemukan!');
     }
 
     return rows.map(mapSongsModel)[0];
@@ -65,7 +65,7 @@ class SongsService {
     const result = await this._pool.query(query);
 
     if (!result.rowCount) {
-      throw new NotFoundError('song tidak ditemukan');
+      throw new NotFoundError('Song gagal diperbarui. Id tidak ditemukan!');
     }
   }
 
@@ -78,7 +78,7 @@ class SongsService {
     const result = await this._pool.query(query);
 
     if (!result.rowCount) {
-      throw new NotFoundError('song tidak ditemukan');
+      throw new NotFoundError('Song gagal dihapus. Id tidak ditemukan!');
     }
   }
 }

@@ -15,7 +15,7 @@ class SongsHandler {
 
     const response = h.response({
       status: 'success',
-      message: 'Song berhasil ditambahkan',
+      message: 'Song berhasil ditambahkan!',
       data: {
         songId,
       },
@@ -31,11 +31,7 @@ class SongsHandler {
     return {
       status: 'success',
       data: {
-        songs: songs.map((s) => ({
-          id: s.id,
-          title: s.title,
-          performer: s.performer,
-        })),
+        songs,
       },
     };
   }
@@ -59,7 +55,7 @@ class SongsHandler {
 
     return {
       status: 'success',
-      message: 'Song berhasil diperbarui',
+      message: 'Song berhasil diperbarui!',
     };
   }
 
@@ -69,7 +65,7 @@ class SongsHandler {
 
     return {
       status: 'success',
-      message: 'Song berhasil dihapus',
+      message: 'Song berhasil dihapus!',
     };
   }
 
