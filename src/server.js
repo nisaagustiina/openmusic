@@ -62,7 +62,7 @@ const init = async () => {
     cacheService,
   );
   const uploadsService = new UploadsService();
-  const albumlikesService = new AlbumLikesService(cacheService);
+  const albumlikesService = new AlbumLikesService(albumsService, cacheService);
 
   const server = Hapi.server({
     port: process.env.PORT,
