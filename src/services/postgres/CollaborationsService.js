@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
+const AuthorizationError = require('../../exceptions/AuthenticationError');
 
 class CollaborationsService {
   constructor() {
@@ -46,7 +47,7 @@ class CollaborationsService {
     const result = await this._pool.query(query);
 
     if (!result.rowCount) {
-      throw new InvariantError('Collaboration gagal diverifikasi!');
+      throw new AuthorizationError('Authorization gagal');
     }
 
   }

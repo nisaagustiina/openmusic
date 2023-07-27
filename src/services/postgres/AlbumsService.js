@@ -2,6 +2,7 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
+const { mapAlbumsModel } = require('../../utils');
 
 class AlbumsService {
   constructor(cacheService) {
@@ -41,8 +42,10 @@ class AlbumsService {
       throw new NotFoundError('Album tidak ditemukan. Id tidak ditemukan!');
     }
 
+    const res = query.rows.map(mapAlbumsModel)[0];
+
     return {
-      ...query.rows[0],
+      ...res,
       songs: querySong.rows,
     };
   }

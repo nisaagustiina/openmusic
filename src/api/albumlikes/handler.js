@@ -7,32 +7,45 @@ class AlbumLikesHandler {
     autoBind(this);
   }
 
-  async postAlbumLikesHandler(request, h) {
-    const { userId } = request.auth.credentials;
+  async postLikeByIdHandler(request, h) {
     const { id } = request.params;
+    const { userId } = request.auth.credentials;
+    await this._service.verifyUserLiked(id, userId);
 
-    const message = await this._service.addAlbumLikes(id, userId);
+    await this._service.addLikeToAlbum(id, userId);
 
     const response = h.response({
       status: 'success',
-      message,
+      message: 'Anda menyukai album ini',
     });
-
     response.code(201);
     return response;
   }
 
-  async getAlbumLikesHandler(request, h) {
+  async deleteLikeByIdHandler(request) {
     const { id } = request.params;
-    const { likes, isCache } = await this._service.getAlbumLikes(id);
-    return h
-      .response({
-        status: 'success',
-        data: {
-          likes,
-        },
-      })
-      .header('X-Data-Source', isCache ? 'cache' : 'db');
+    const { userId } = request.auth.credentials;
+
+    await this._service.deleteLike(id, userId);
+    return {
+      status: 'success',
+      message: 'Berhasil membatalkan like',
+    };
+  }
+
+  async getLikesByIdHandler(request, h) {
+    const { id: albumId } = request.params;
+    const { likes, cached } = await this._service.getAlbumLikes(albumId);
+    const response = h.response({
+      status: 'success',
+      data: {
+        likes,
+      },
+    });
+    if (cached) {
+      response.header('X-Data-Source', 'cache');
+    }
+    return response;
   }
 
 }

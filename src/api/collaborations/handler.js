@@ -16,9 +16,9 @@ class CollaborationsHandler {
     const { playlistId, userId } = request.payload;
     const { userId: owner } = request.auth.credentials;
 
-    await this._playlistService.verifyPlaylistOwner(playlistId, owner);
+    await this._playlistsService.verifyPlaylistOwner(playlistId, owner);
     await this._usersService.getUserById(userId);
-    const collaborationId = await this._collaborationService.addCollaboration(
+    const collaborationId = await this._service.addCollaboration(
       playlistId,
       userId,
     );
@@ -41,8 +41,8 @@ class CollaborationsHandler {
     const { playlistId, userId } = request.payload;
     const { userId: owner } = request.auth.credentials;
 
-    await this._playlistService.verifyPlaylistOwner(playlistId, owner);
-    await this._collaborationService.deleteCollaboration(playlistId, userId);
+    await this._playlistsService.verifyPlaylistOwner(playlistId, owner);
+    await this._service.deleteCollaboration(playlistId, userId);
 
     return {
       status: 'success',

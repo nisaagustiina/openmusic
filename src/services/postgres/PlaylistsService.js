@@ -3,6 +3,7 @@ const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
+const ClientError = require('../../exceptions/ClientError');
 
 class PlaylistsService {
   constructor(collaborationsService, cacheService) {
@@ -184,17 +185,10 @@ class PlaylistsService {
     try {
       await this.verifyPlaylistOwner(playlistId, userId);
     } catch (error) {
-      if (error instanceof NotFoundError) {
+      if (error instanceof ClientError) {
         throw error;
       }
-    }
-
-    try {
-      await this._collaborationsService.verifyCollaboration(playlistId, userId);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw error;
-      }
+      await this._collaborationsService.verifyCollaborator(playlistId, userId);
     }
   }
 

@@ -39,7 +39,7 @@ const UploadsService = require('./services/postgres/UploadService');
 const UploadsValidator = require('./validator/uploads');
 
 const albumlikes = require('./api/albumlikes');
-const AlbumLikesService = require('./services/postgres/AlbumsLikeService');
+const AlbumLikesService = require('./services/postgres/AlbumLikesService');
 
 const ProducerService = require('./services/rabbitmq/ProducerService');
 

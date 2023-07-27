@@ -1,12 +1,9 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
-const autoBind = require('auto-bind');
-
 class Listener {
   constructor(playlistService, mailSender) {
     this._playlistService = playlistService;
     this._mailSender = mailSender;
 
-    autoBind(this);
+    this.listen = this.listen.bind(this);
   }
 
   async listen(message) {
